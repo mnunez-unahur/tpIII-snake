@@ -92,7 +92,7 @@ def obtenerComidaRandom(cola=[]):
     return pygame.Rect(randomX, randomY, CELL_SIZE, CELL_SIZE )
 
 def init():
-    screen = pygame.display.set_mode((BOAR_HEIGHT, BOARD_WIDTH))
+    screen = pygame.display.set_mode((BOARD_WIDTH, BOAR_HEIGHT))
     clock = pygame.time.Clock()
     SNAKE_COLOR = (255, 0, 0)
     SNAKE_DEATH_COLOR = (238, 130, 238)
