@@ -27,6 +27,10 @@ class Personaje(ABC):
 
         return pygame.Rect(x, y, self.cellSize, self.cellSize)
 
+    # determina la siguiente dirección del personaje
+    @abstractmethod
+    def determinarDireccion(self):
+        pass
 
     # ejecuta un movimiento del jugador
     def tick(self):
@@ -63,11 +67,6 @@ class Personaje(ABC):
                 return True
         return False
 
-
-    # determina la siguiente dirección del personaje
-    @abstractmethod
-    def determinarDireccion(self):
-        pass
 
     # alimentar al snake
     # incrementa el tamaño del cuerpo
