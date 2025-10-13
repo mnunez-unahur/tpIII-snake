@@ -31,11 +31,15 @@ class Personaje(ABC):
 
     # ejecuta un movimiento del jugador
     def tick(self):
+        self.determinarDireccion()
 
         # si está detenido no hago nada
         if self.detenido:
             return
 
+        self.mover()
+
+    def mover(self):
         # agregamos la celda actual en la cola para poder dibujarla
         self.cola.append(self.getRect())
             
@@ -63,7 +67,7 @@ class Personaje(ABC):
 
     # determina la siguiente dirección del personaje
     @abstractmethod
-    def controlarDireccion(self):
+    def determinarDireccion(self):
         pass
 
     # alimentar al snake
@@ -82,7 +86,7 @@ class Humano(Personaje):
     def __init__(self, direccionInicial=DIR_RIGHT, x=0, y=0, cellSize = 10, tablero=None, colorCabeza=(255, 0, 0), colorCuerpo=(255, 255, 0)):
         super().__init__(direccionInicial,x, y, cellSize, tablero, colorCabeza, colorCuerpo)
     
-    def controlarDireccion(self):
+    def determinarDireccion(self):
         keys = pygame.key.get_pressed()
 
         if keys[pygame.K_LEFT]:
@@ -99,5 +103,19 @@ class Humano(Personaje):
             self.detenido = False
 
 
+class IA(Personaje):
+    def __init__(self, direccionInicial=DIR_RIGHT, x=0, y=0, cellSize = 10, tablero=None, colorCabeza=(255, 0, 0), colorCuerpo=(255, 255, 0)):
+        super().__init__(direccionInicial,x, y, cellSize, tablero, colorCabeza, colorCuerpo)
+    
+    def determinarDireccion(self):
+        # pasos
+        # 1 - si no tiene un camino establecido, ejecutar algoritmo y usar el primer paso
+        # 2 - si ya tiene un camino establecido, usar el primer paso
+        return
+
+    def determinarDireccion(self):
+        super.mover()
+        # despues de mover, debería eliminar el primer elemento del camino establecido
+        return
 
 

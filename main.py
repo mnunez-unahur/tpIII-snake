@@ -136,7 +136,6 @@ def init():
                 continue
 
 
-        snake.controlarDireccion()
         snake.tick()
 
         rectSnake = snake.getRect()
