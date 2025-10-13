@@ -19,18 +19,6 @@ def movePlayer(x, y, cellSize, dir, cola=[], alargarCola=False):
     return x, y, cola
 
 
-def dibujarCola(cola, color, screen):
-    for rect in cola:
-        pygame.draw.rect(screen, color, rect)
-
-
-def hayColisionCola(snake: pygame.Rect, cola=[]):
-    for rect in cola:
-        if snake.colliderect(rect):
-            print(f"colision entre {snake} y {rect}")
-            return True
-    return False
-
 
 DIR_LEFT = 'LEFT'
 DIR_RIGHT = 'RIGHT'
@@ -121,7 +109,6 @@ def init():
     snake = elementos.Humano(
         colorCabeza=SNAKE_COLOR, 
         colorCuerpo=TAIL_COLOR, 
-        tablero=screen,
         x=x, y=y,
         cellSize = CELL_SIZE)
 
@@ -148,7 +135,7 @@ def init():
         screen.fill(BG_COLOR)  # Fill the display with a solid color
 
         initStage(WALL_WIDTH, WALL_HEIGHT, screen, WALL_COLOR)
-        snake.dibujar()
+        snake.dibujar(screen)
         pygame.draw.rect(screen, FOOD_COLOR, comida)
 
         if (wallCollision(x, y, WALL_WIDTH, WALL_HEIGHT, screen)) or snake.hayColisionConCuerpo():

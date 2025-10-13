@@ -8,7 +8,7 @@ DIR_UP = 'UP'
 DIR_DOWN = 'DOWN'
 
 class Personaje(ABC):
-    def __init__(self, direccionInicial=DIR_RIGHT, x=0, y=0, cellSize = 10, tablero=None, colorCabeza=(255, 0, 0), colorCuerpo=(255, 255, 0)):
+    def __init__(self, direccionInicial=DIR_RIGHT, x=0, y=0, cellSize = 10, colorCabeza=(255, 0, 0), colorCuerpo=(255, 255, 0)):
         self.detenido = True
         self.direccion = direccionInicial
         self.x = x
@@ -17,7 +17,6 @@ class Personaje(ABC):
         self.creceAlMover = False
         self.cola=[]
         self.cellSize = cellSize
-        self.tablero = tablero
         self.colorCabeza = colorCabeza
         self.colorCuerpo = colorCuerpo
 
@@ -75,16 +74,16 @@ class Personaje(ABC):
     def alimentar(self):
         self.creceAlMover = True
 
-    def dibujar(self):
+    def dibujar(self, tablero):
         for rect in self.cola:
-            pygame.draw.rect(self.tablero, self.colorCuerpo, rect)
-        pygame.draw.rect(self.tablero, self.colorCabeza, self.getRect())
+            pygame.draw.rect(tablero, self.colorCuerpo, rect)
+        pygame.draw.rect(tablero, self.colorCabeza, self.getRect())
 
 
 
 class Humano(Personaje):
-    def __init__(self, direccionInicial=DIR_RIGHT, x=0, y=0, cellSize = 10, tablero=None, colorCabeza=(255, 0, 0), colorCuerpo=(255, 255, 0)):
-        super().__init__(direccionInicial,x, y, cellSize, tablero, colorCabeza, colorCuerpo)
+    def __init__(self, direccionInicial=DIR_RIGHT, x=0, y=0, cellSize = 10, colorCabeza=(255, 0, 0), colorCuerpo=(255, 255, 0)):
+        super().__init__(direccionInicial,x, y, cellSize, colorCabeza, colorCuerpo)
     
     def determinarDireccion(self):
         keys = pygame.key.get_pressed()
@@ -104,8 +103,8 @@ class Humano(Personaje):
 
 
 class IA(Personaje):
-    def __init__(self, direccionInicial=DIR_RIGHT, x=0, y=0, cellSize = 10, tablero=None, colorCabeza=(255, 0, 0), colorCuerpo=(255, 255, 0)):
-        super().__init__(direccionInicial,x, y, cellSize, tablero, colorCabeza, colorCuerpo)
+    def __init__(self, direccionInicial=DIR_RIGHT, x=0, y=0, cellSize = 10, colorCabeza=(255, 0, 0), colorCuerpo=(255, 255, 0)):
+        super().__init__(direccionInicial,x, y, cellSize, colorCabeza, colorCuerpo)
     
     def determinarDireccion(self):
         # pasos
