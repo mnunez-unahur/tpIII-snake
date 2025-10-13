@@ -63,9 +63,9 @@ def init():
 
         muro.dibujar(screen)
         snake.dibujar(screen)
-        comida.dibujar(screen)
+        comida.dibujar(screen, snake)
 
-        if muro.hayColision(snake) or snake.hayColisionConCuerpo():
+        if muro.hayColision(snake) or snake.hayColision(snake):
             gameover = True
 
         pygame.display.flip()

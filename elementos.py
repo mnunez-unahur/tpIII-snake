@@ -62,9 +62,9 @@ class Personaje(ABC):
         self.creceAlMover = False
 
 
-    def hayColisionConCuerpo(self):
+    def hayColision(self, objeto):
         for rect in self.cola:
-            if self.getRect().colliderect(rect):
+            if rect.colliderect(objeto.getRect()):
                 return True
         return False
 
@@ -133,9 +133,14 @@ class Comida:
             20, int(tablero.get_height()/self.cellSize)-self.cellSize*2) 
 
 
-    def dibujar(self, tablero):
-        # TODO: hacer que no aparezca sobre la cola
+    def dibujar(self, tablero, snake):
+
+
         pygame.draw.rect(tablero, self.color, self.getRect())
+        # evitamos que la comida aparezca en el cuerpo de snake
+        while snake.hayColision(self):
+            pygame.draw.rect(tablero, self.color, self.getRect())
+
 
 
     # devuelve el rectangulo que ocupa la comida
