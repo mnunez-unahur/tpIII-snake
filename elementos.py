@@ -1,4 +1,5 @@
 import pygame
+import random
 from abc import ABC, abstractmethod
 
 
@@ -80,6 +81,7 @@ class Personaje(ABC):
 
 
 
+
 class Humano(Personaje):
     def __init__(self, direccionInicial=DIR_RIGHT, x=0, y=0, cellSize = 10, colorCabeza=(255, 0, 0), colorCuerpo=(255, 255, 0)):
         super().__init__(direccionInicial,x, y, cellSize, colorCabeza, colorCuerpo)
@@ -117,3 +119,52 @@ class IA(Personaje):
         return
 
 
+class Comida:
+    def __init__(self, cellSize = 10, color=(0, 255, 0)):
+        self.color = color
+        self.cellSize = cellSize
+        self.x = 0
+        self.y = 0
+
+    def reaparecer(self, tablero):
+        self.x = random.randint(
+            20, int(tablero.get_width()/self.cellSize)-self.cellSize*2) 
+        self.y = random.randint(
+            20, int(tablero.get_height()/self.cellSize)-self.cellSize*2) 
+
+
+    def dibujar(self, tablero):
+        # TODO: hacer que no aparezca sobre la cola
+        pygame.draw.rect(tablero, self.color, self.getRect())
+
+
+    # devuelve el rectangulo que ocupa la comida
+    def getRect(self):
+        x = self.x * self.cellSize
+        y = self.y * self.cellSize
+
+        return pygame.Rect(x, y, self.cellSize, self.cellSize)
+
+class Muro():
+    def __init__(self, tablero, grosor=20, color=(255, 255, 0)):
+        self.color = color
+        self.muro = []
+
+        ancho_tablero = tablero.get_width()
+        alto_tablero = tablero.get_height()
+
+        self.muro.append(pygame.Rect(0, 0, ancho_tablero, grosor))
+        self.muro.append(pygame.Rect(ancho_tablero - grosor, 0, ancho_tablero - grosor, ancho_tablero))
+        self.muro.append(pygame.Rect(0, alto_tablero - grosor, ancho_tablero, grosor))
+        self.muro.append(pygame.Rect(0, 0, grosor, ancho_tablero))
+
+    def dibujar(self, tablero):
+        for rect in self.muro:
+            pygame.draw.rect(tablero, self.color, rect)
+
+    # devuelve verdadero si hay colición del objeto rect con el muro
+    def hayColision(self, objeto):
+        for rect in self.muro:
+            if rect.colliderect(objeto.getRect()):
+                return True
+        return False
