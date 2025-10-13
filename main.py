@@ -1,6 +1,7 @@
 import pygame
 import random
 import ia
+import elementos
 
 pygame.init()
 
@@ -18,8 +19,7 @@ def movePlayer(x, y, cellSize, dir, cola=[], alargarCola=False):
     return x, y, cola
 
 
-def dibujarCola(cola, color, size, screen):
-
+def dibujarCola(cola, color, screen):
     for rect in cola:
         pygame.draw.rect(screen, color, rect)
 
@@ -36,9 +36,9 @@ DIR_LEFT = 'LEFT'
 DIR_RIGHT = 'RIGHT'
 DIR_UP = 'UP'
 DIR_DOWN = 'DOWN'
+CELL_SIZE = 10
 BOARD_WIDTH = 640
 BOAR_HEIGHT = 480
-CELL_SIZE = 10
 
 
 def getDirection():
@@ -110,19 +110,20 @@ def init():
     WALL_COLOR = (255, 255, 0)
     TAIL_COLOR = (255, 255, 0)
     FOOD_COLOR = (0, 255, 0)
-
     BG_COLOR = (0, 0, 0)
-    PLAYER_WIDTH, PLAYER_HEIGHT = 10, 10
-    WALL_WIDTH = PLAYER_WIDTH * 2
-    WALL_HEIGHT = PLAYER_HEIGHT * 2
-    STEP = PLAYER_WIDTH
+
+    WALL_WIDTH = CELL_SIZE * 2
+    WALL_HEIGHT = CELL_SIZE * 2
     x, y = WALL_WIDTH, WALL_HEIGHT
 
-    cola = []
     comida = obtenerComidaRandom()
 
-    LAST_DIR = DIR_RIGHT
-    currentDir = None
+    snake = elementos.Humano(
+        colorCabeza=SNAKE_COLOR, 
+        colorCuerpo=TAIL_COLOR, 
+        tablero=screen,
+        x=x, y=y,
+        cellSize = CELL_SIZE)
 
     salir = False
     gameover = False
@@ -134,30 +135,24 @@ def init():
                 salir = True
                 continue
 
-        if getDirection() != None:
-            LAST_DIR = getDirection()
-            currentDir = getDirection()
-        else:
-            currentDir = LAST_DIR
 
-        x, y, cola = movePlayer(x, y, STEP, currentDir, cola)
-        snake = pygame.Rect(x, y, PLAYER_WIDTH, PLAYER_HEIGHT)
+        snake.controlarDireccion()
+        snake.tick()
+
+        rectSnake = snake.getRect()
+
         # si hay comida genero nueva comida
-        if snake.colliderect(comida):
-            print(f"comiendo, nuevo largo de snake: {len(cola)}")
-            comida = obtenerComidaRandom(cola)
-        else:  # sino hay comida, elimino el ultimo elemento de la cola
-            cola.pop(0)
+        if rectSnake.colliderect(comida):
+            snake.alimentar()
+            comida = obtenerComidaRandom(snake.cola)
 
         screen.fill(BG_COLOR)  # Fill the display with a solid color
 
         initStage(WALL_WIDTH, WALL_HEIGHT, screen, WALL_COLOR)
-        dibujarCola(cola, TAIL_COLOR, PLAYER_HEIGHT, screen)
-
-        pygame.draw.rect(screen, SNAKE_COLOR, snake)
+        snake.dibujar()
         pygame.draw.rect(screen, FOOD_COLOR, comida)
 
-        if (wallCollision(x, y, WALL_WIDTH, WALL_HEIGHT, screen)) or hayColisionCola(snake, cola):
+        if (wallCollision(x, y, WALL_WIDTH, WALL_HEIGHT, screen)) or snake.hayColisionConCuerpo():
             gameover = True
 
         pygame.display.flip()
@@ -171,7 +166,7 @@ def init():
                 continue
         screen.fill(BG_COLOR)  # Fill the display with a solid color
         pygame.draw.rect(screen, SNAKE_DEATH_COLOR,
-                         (screen.get_width() / 2, screen.get_height() / 2, PLAYER_WIDTH * 2, PLAYER_HEIGHT * 2))
+                         (screen.get_width() / 2, screen.get_height() / 2, CELL_SIZE * 2, CELL_SIZE * 2))
 
         pygame.display.flip()
         clock.tick(1)
@@ -268,5 +263,5 @@ def initIA():
     pygame.quit()
 
 
-#init()
-initIA()
+init()
+# initIA()
