@@ -1,5 +1,7 @@
 import pygame
 import random
+import ia
+
 from abc import ABC, abstractmethod
 
 
@@ -9,7 +11,16 @@ DIR_UP = 'UP'
 DIR_DOWN = 'DOWN'
 
 class Personaje(ABC):
-    def __init__(self, direccionInicial=DIR_RIGHT, x=0, y=0, cellSize = 10, colorCabeza=(255, 0, 0), colorCuerpo=(255, 255, 0)):
+    def __init__(self,
+        tablero,
+        direccionInicial=DIR_RIGHT, 
+        x=0, 
+        y=0, 
+        cellSize = 10, 
+        colorCabeza=(255, 0, 0), 
+        colorCuerpo=(255, 255, 0)):
+
+        self.tablero = tablero
         self.detenido = True
         self.direccion = direccionInicial
         self.x = x
@@ -20,6 +31,7 @@ class Personaje(ABC):
         self.cellSize = cellSize
         self.colorCabeza = colorCabeza
         self.colorCuerpo = colorCuerpo
+        self.puntos = 0
 
     # devuelve el rectangulo que ocupa el personaje
     def getRect(self):
@@ -65,6 +77,7 @@ class Personaje(ABC):
     def hayColision(self, objeto):
         for rect in self.cola:
             if rect.colliderect(objeto.getRect()):
+                print(f"colision con {rect}")
                 return True
         return False
 
@@ -73,6 +86,8 @@ class Personaje(ABC):
     # incrementa el tamaño del cuerpo
     def alimentar(self):
         self.creceAlMover = True
+        self.puntos += 1
+        print(f" ********************** puntos: {self.puntos} *************************")
 
     def dibujar(self, tablero):
         for rect in self.cola:
@@ -83,8 +98,10 @@ class Personaje(ABC):
 
 
 class Humano(Personaje):
-    def __init__(self, direccionInicial=DIR_RIGHT, x=0, y=0, cellSize = 10, colorCabeza=(255, 0, 0), colorCuerpo=(255, 255, 0)):
-        super().__init__(direccionInicial,x, y, cellSize, colorCabeza, colorCuerpo)
+    # def __init__(self, 
+    #     direccionInicial=DIR_RIGHT, x=0, y=0, cellSize = 10, colorCabeza=(255, 0, 0), colorCuerpo=(255, 255, 0)):
+
+    #     super().__init__(direccionInicial,x, y, cellSize, colorCabeza, colorCuerpo)
     
     def determinarDireccion(self):
         keys = pygame.key.get_pressed()
@@ -104,18 +121,61 @@ class Humano(Personaje):
 
 
 class IA(Personaje):
-    def __init__(self, direccionInicial=DIR_RIGHT, x=0, y=0, cellSize = 10, colorCabeza=(255, 0, 0), colorCuerpo=(255, 255, 0)):
-        super().__init__(direccionInicial,x, y, cellSize, colorCabeza, colorCuerpo)
+    def __init__(self,
+        tablero,
+        comida,
+        direccionInicial=DIR_RIGHT, 
+        x=0, y=0, 
+        cellSize = 10, 
+        colorCabeza=(255, 0, 0), 
+        colorCuerpo=(255, 255, 0)):
+
+        self.comida = comida
+        self.path = []
+        super().__init__(tablero, direccionInicial,x, y, cellSize, colorCabeza, colorCuerpo)
     
     def determinarDireccion(self):
-        # pasos
-        # 1 - si no tiene un camino establecido, ejecutar algoritmo y usar el primer paso
-        # 2 - si ya tiene un camino establecido, usar el primer paso
+        if len(self.path) == 0:
+            start = (self.x, self.y)
+            goal = (self.comida.x, self.comida.y)
+
+            ancho_tablero = int(self.tablero.get_width() / self.cellSize)
+            alto_tablero = int(self.tablero.get_height() / self.cellSize)
+
+            obstacles = {}
+            print(f"cola: {self.cola}")
+            for rect in self.cola:
+                x = int(rect.x / self.cellSize)
+                y = int(rect.y / self.cellSize)
+                obstacles[(x, y)] = True
+
+            path = ia.astar(start, goal, ancho_tablero,
+                                alto_tablero, obstacles)
+
+            print(f">>>>> path: {path} ")
+
+            if path == None:
+                raise "error, path no encontrado"
+            self.detenido = False
+
+            # descarto el primero porque ya estoy en ese
+            # sino hay colision con el cuerpo
+            path.pop(0) 
+            self.path = path
         return
 
-    def determinarDireccion(self):
-        super.mover()
-        # despues de mover, debería eliminar el primer elemento del camino establecido
+    def mover(self):
+        # si no no tiene un path definido, lo busco
+        if len(self.path) > 0:
+            self.cola.append(self.getRect())
+
+            (self.x, self.y) = self.path.pop(0)
+
+            if not self.creceAlMover:
+                self.cola.pop(0)
+                
+        self.creceAlMover = False
+
         return
 
 
@@ -126,21 +186,25 @@ class Comida:
         self.x = 0
         self.y = 0
 
-    def reaparecer(self, tablero):
+    def reaparecer(self, tablero, snake):
         self.x = random.randint(
-            20, int(tablero.get_width()/self.cellSize)-self.cellSize*2) 
+            2, int(tablero.get_width()/self.cellSize) -4)
         self.y = random.randint(
-            20, int(tablero.get_height()/self.cellSize)-self.cellSize*2) 
+            2, int(tablero.get_height()/self.cellSize) -4)
 
-
-    def dibujar(self, tablero, snake):
-
-
-        pygame.draw.rect(tablero, self.color, self.getRect())
-        # evitamos que la comida aparezca en el cuerpo de snake
+        # evitamos que la comida aparezca en el cuerpo
         while snake.hayColision(self):
-            pygame.draw.rect(tablero, self.color, self.getRect())
+            self.x = random.randint(
+                2, int(tablero.get_width()/self.cellSize) -4)
+            self.y = random.randint(
+                2, int(tablero.get_height()/self.cellSize) -4)
+        
+        rect = pygame.Rect(self.x, self.y, self.cellSize, self.cellSize)      
+        print(f"nueva comida en {rect}")
 
+
+    def dibujar(self, tablero):
+        pygame.draw.rect(tablero, self.color, self.getRect())
 
 
     # devuelve el rectangulo que ocupa la comida
