@@ -27,6 +27,7 @@ def astar(start, goal, board_width, board_height, obstacles):
         for nx, ny in neighbors:
             if not (0 <= nx < board_width and 0 <= ny < board_height):
                 continue
+            # print(f"{(nx, ny)} in obstacles: {(nx, ny) in obstacles}")
             if (nx, ny) in obstacles and (nx, ny) != goal:
                 continue
 
