@@ -1,14 +1,43 @@
 import pygame
 import random
 import ia
-
 from abc import ABC, abstractmethod
-
 
 DIR_LEFT = 'LEFT'
 DIR_RIGHT = 'RIGHT'
 DIR_UP = 'UP'
 DIR_DOWN = 'DOWN'
+
+class Tablero():
+    def __init__(self, ancho, alto,  tamCelda, color):
+        self.alto = alto
+        self.ancho = ancho
+        self.cellSize = tamCelda
+        self.color = color
+        self.pantalla = pygame.display.set_mode((self.anchoPx(), self.altoPx()))
+
+    def altoPx(self):
+        return self.alto * self.cellSize
+
+    def anchoPx(self):
+        return self.ancho * self.cellSize
+
+    def centro(self):
+        return self.ancho//2, self.alto//2
+
+    def centroPx(self):
+        return self.centro() * self.cellSize
+
+    def limpiar(self):
+        self.pantalla.fill(self.color)
+
+    def dibujar(self, elemento, color):
+        pygame.draw.rect(self.pantalla, color, elemento)
+
+    # retorna un grafo representando al tablero
+    def grafo(self):
+        #TODO: debe retornar el grafo representando al tablero
+        pass
 
 class Personaje(ABC):
     def __init__(self,
@@ -16,29 +45,29 @@ class Personaje(ABC):
         direccionInicial=DIR_RIGHT, 
         x=0, 
         y=0, 
-        cellSize = 10, 
         colorCabeza=(255, 0, 0), 
         colorCuerpo=(255, 255, 0)):
 
+
         self.tablero = tablero
+        self.size = tablero.cellSize
         self.detenido = True
         self.direccion = direccionInicial
         self.x = x
         self.y = y
         # indica que la siguiente vez que se mueva, el cuerpo debe crecer
         self.creceAlMover = False
-        self.cola=[]
-        self.cellSize = cellSize
+        self.cuerpo=[]
         self.colorCabeza = colorCabeza
         self.colorCuerpo = colorCuerpo
         self.puntos = 0
 
     # devuelve el rectangulo que ocupa el personaje
     def getRect(self):
-        x = self.x * self.cellSize
-        y = self.y * self.cellSize
+        x = self.x * self.size
+        y = self.y * self.size
 
-        return pygame.Rect(x, y, self.cellSize, self.cellSize)
+        return pygame.Rect(x, y, self.size, self.size)
 
     # determina la siguiente dirección del personaje
     @abstractmethod
@@ -57,7 +86,7 @@ class Personaje(ABC):
 
     def mover(self):
         # agregamos la celda actual en la cola para poder dibujarla
-        self.cola.append(self.getRect())
+        self.cuerpo.append(self.getRect())
             
         if self.direccion == DIR_UP:
             self.y -= 1
@@ -70,12 +99,12 @@ class Personaje(ABC):
         
         # salvo que haya comido, tengo que eliminar el ultimo segmento de la cola
         if not self.creceAlMover:
-            self.cola.pop(0)
+            self.cuerpo.pop(0)
         self.creceAlMover = False
 
 
     def hayColision(self, objeto):
-        for rect in self.cola:
+        for rect in self.cuerpo:
             if rect.colliderect(objeto.getRect()):
                 print(f"colision con {rect}")
                 return True
@@ -89,20 +118,12 @@ class Personaje(ABC):
         self.puntos += 1
         print(f" ********************** puntos: {self.puntos} *************************")
 
-    def dibujar(self, tablero):
-        for rect in self.cola:
-            pygame.draw.rect(tablero, self.colorCuerpo, rect)
-        pygame.draw.rect(tablero, self.colorCabeza, self.getRect())
+    def dibujar(self):
+        for rect in self.cuerpo:
+            self.tablero.dibujar(rect, self.colorCuerpo)
+        self.tablero.dibujar(self.getRect(), self.colorCabeza)
 
-
-
-
-class Humano(Personaje):
-    # def __init__(self, 
-    #     direccionInicial=DIR_RIGHT, x=0, y=0, cellSize = 10, colorCabeza=(255, 0, 0), colorCuerpo=(255, 255, 0)):
-
-    #     super().__init__(direccionInicial,x, y, cellSize, colorCabeza, colorCuerpo)
-    
+class Humano(Personaje):   
     def determinarDireccion(self):
         keys = pygame.key.get_pressed()
 
@@ -126,27 +147,25 @@ class IA(Personaje):
         comida,
         direccionInicial=DIR_RIGHT, 
         x=0, y=0, 
-        cellSize = 10, 
         colorCabeza=(255, 0, 0), 
         colorCuerpo=(255, 255, 0)):
 
         self.comida = comida
-        self.path = []
-        super().__init__(tablero, direccionInicial,x, y, cellSize, colorCabeza, colorCuerpo)
+        self.camino = []
+        super().__init__(tablero, direccionInicial,x, y, colorCabeza, colorCuerpo)
     
     def determinarDireccion(self):
-        if len(self.path) == 0:
+        if len(self.camino) == 0:
             start = (self.x, self.y)
             goal = (self.comida.x, self.comida.y)
 
-            ancho_tablero = int(self.tablero.get_width() / self.cellSize)
-            alto_tablero = int(self.tablero.get_height() / self.cellSize)
+            ancho_tablero = self.tablero.ancho
+            alto_tablero = self.tablero.alto
 
             obstacles = {}
-            print(f"cola: {self.cola}")
-            for rect in self.cola:
-                x = int(rect.x / self.cellSize)
-                y = int(rect.y / self.cellSize)
+            for rect in self.cuerpo:
+                x = int(rect.x / self.size)
+                y = int(rect.y / self.size)
                 obstacles[(x, y)] = True
 
             path = ia.astar(start, goal, ancho_tablero,
@@ -161,18 +180,18 @@ class IA(Personaje):
             # descarto el primero porque ya estoy en ese
             # sino hay colision con el cuerpo
             path.pop(0) 
-            self.path = path
+            self.camino = path
         return
 
     def mover(self):
         # si no no tiene un path definido, lo busco
-        if len(self.path) > 0:
-            self.cola.append(self.getRect())
+        if len(self.camino) > 0:
+            self.cuerpo.append(self.getRect())
 
-            (self.x, self.y) = self.path.pop(0)
+            (self.x, self.y) = self.camino.pop(0)
 
             if not self.creceAlMover:
-                self.cola.pop(0)
+                self.cuerpo.pop(0)
                 
         self.creceAlMover = False
 
@@ -180,56 +199,56 @@ class IA(Personaje):
 
 
 class Comida:
-    def __init__(self, cellSize = 10, color=(0, 255, 0)):
+    def __init__(self, tablero, color=(0, 255, 0)):
+        self.tablero = tablero
+        self.size = tablero.cellSize
         self.color = color
-        self.cellSize = cellSize
         self.x = 0
         self.y = 0
 
-    def reaparecer(self, tablero, snake):
-        self.x = random.randint(
-            2, int(tablero.get_width()/self.cellSize) -4)
-        self.y = random.randint(
-            2, int(tablero.get_height()/self.cellSize) -4)
+    def reaparecer(self, snake):
+        limite_derecho = self.tablero.ancho - 4
+        limite_inferior = self.tablero.alto - 4
+
+        self.x = random.randint(2, limite_derecho)
+        self.y = random.randint(2, limite_inferior)
 
         # evitamos que la comida aparezca en el cuerpo
         while snake.hayColision(self):
-            self.x = random.randint(
-                2, int(tablero.get_width()/self.cellSize) -4)
-            self.y = random.randint(
-                2, int(tablero.get_height()/self.cellSize) -4)
+            self.x = random.randint(2, limite_derecho)
+            self.y = random.randint(2, limite_inferior)
         
-        rect = pygame.Rect(self.x, self.y, self.cellSize, self.cellSize)      
+        rect = pygame.Rect(self.x, self.y, self.size, self.size)      
         print(f"nueva comida en {rect}")
 
 
-    def dibujar(self, tablero):
-        pygame.draw.rect(tablero, self.color, self.getRect())
-
+    def dibujar(self):
+        self.tablero.dibujar(self.getRect(), self.color)
 
     # devuelve el rectangulo que ocupa la comida
     def getRect(self):
-        x = self.x * self.cellSize
-        y = self.y * self.cellSize
+        x = self.x * self.size
+        y = self.y * self.size
 
-        return pygame.Rect(x, y, self.cellSize, self.cellSize)
+        return pygame.Rect(x, y, self.size, self.size)
 
 class Muro():
     def __init__(self, tablero, grosor=20, color=(255, 255, 0)):
         self.color = color
+        self.tablero = tablero
         self.muro = []
 
-        ancho_tablero = tablero.get_width()
-        alto_tablero = tablero.get_height()
+        ancho_tablero = tablero.pantalla.get_width()
+        alto_tablero = tablero.pantalla.get_height()
 
         self.muro.append(pygame.Rect(0, 0, ancho_tablero, grosor))
         self.muro.append(pygame.Rect(ancho_tablero - grosor, 0, ancho_tablero - grosor, ancho_tablero))
         self.muro.append(pygame.Rect(0, alto_tablero - grosor, ancho_tablero, grosor))
         self.muro.append(pygame.Rect(0, 0, grosor, ancho_tablero))
 
-    def dibujar(self, tablero):
+    def dibujar(self):
         for rect in self.muro:
-            pygame.draw.rect(tablero, self.color, rect)
+            self.tablero.dibujar(rect, self.color)
 
     # devuelve verdadero si hay colición del objeto rect con el muro
     def hayColision(self, objeto):

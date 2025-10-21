@@ -1,11 +1,8 @@
 import pygame
 import ia
-import elementos
+import juego
 
 pygame.init()
-CELL_SIZE = 10
-BOARD_WIDTH = 640
-BOAR_HEIGHT = 480
 
 
 def aCoordenadasXY(PosX, PosY, step):
@@ -17,37 +14,36 @@ def aCoordenadasAbsolutas(posx, posy, step):
 
 
 def init():
-    screen = pygame.display.set_mode(
-        (BOARD_WIDTH, BOAR_HEIGHT))
-    clock = pygame.time.Clock()
+    CELL_SIZE = 10
     SNAKE_COLOR = (255, 0, 0)
     SNAKE_DEATH_COLOR = (238, 130, 238)
     WALL_COLOR = (255, 255, 0)
     TAIL_COLOR = (255, 255, 0)
     FOOD_COLOR = (0, 255, 0)
     BG_COLOR = (0, 0, 0)
+    FPS = 10
 
-    x = CELL_SIZE * 2
-    y = CELL_SIZE * 2
+    tablero = juego.Tablero(64, 48, CELL_SIZE, BG_COLOR)
+    clock = pygame.time.Clock()
 
-    comida = elementos.Comida(color=FOOD_COLOR, cellSize=CELL_SIZE)
-    muro = elementos.Muro(screen, color=WALL_COLOR)
+    xInicial, yInicial = tablero.centro()
+    
+    comida = juego.Comida(tablero, color=FOOD_COLOR)
+    muro = juego.Muro(tablero, color=WALL_COLOR)
 
-    # snake = elementos.Humano(
-    #     screen,
+    # snake = juego.Humano(
+    #     tablero,
     #     colorCabeza=SNAKE_COLOR, 
     #     colorCuerpo=TAIL_COLOR, 
-    #     x=x, y=y,
-    #     cellSize = CELL_SIZE)
+    #     x=xInicial, y=yInicial)
 
-    snake = elementos.IA(
-        screen, comida,
+    snake = juego.IA(
+        tablero, comida,
         colorCabeza=SNAKE_COLOR, 
         colorCuerpo=TAIL_COLOR, 
-        x=x, y=y,
-        cellSize = CELL_SIZE)
+        x=xInicial, y=yInicial)
 
-    comida.reaparecer(screen, snake)
+    comida.reaparecer(snake)
 
     salir = False
     gameover = False
@@ -59,26 +55,28 @@ def init():
                 salir = True
                 continue
 
+        # doy control al jugador
         snake.tick()
 
-        screen.fill(BG_COLOR)  # Fill the display with a solid color
+        tablero.limpiar()
+        muro.dibujar()
+        snake.dibujar()
+        comida.dibujar()
 
-        rectSnake = snake.getRect()
-
-        muro.dibujar(screen)
-        snake.dibujar(screen)
-        comida.dibujar(screen)
-
+        # si colisiona con un muro o con si misma pierde
         if muro.hayColision(snake) or snake.hayColision(snake):
             gameover = True
 
-        # si hay comida genero nueva comida
+        # detectamos si hay comida en la posición actual
+        rectSnake = snake.getRect()
         if rectSnake.colliderect(comida.getRect()):
             snake.alimentar()
-            comida.reaparecer(screen, snake)
+            comida.reaparecer(snake)
 
         pygame.display.flip()
-        clock.tick(30)
+
+        # aumenta la velocidad a medida que tiene mas puntos
+        clock.tick(FPS+snake.puntos)
 
     # mostramos mensaje de game over
     while not salir:
@@ -86,12 +84,12 @@ def init():
             if event.type == pygame.QUIT:
                 salir = True
                 continue
-        # screen.fill(BG_COLOR)  # Fill the display with a solid color
-        pygame.draw.rect(screen, SNAKE_DEATH_COLOR,
-                         (screen.get_width() / 2, screen.get_height() / 2, CELL_SIZE * 2, CELL_SIZE * 2))
+        # tablero.pantalla.fill(BG_COLOR)  # Fill the display with a solid color
+        pygame.draw.rect(tablero.pantalla, SNAKE_DEATH_COLOR,
+                         (tablero.pantalla.get_width() / 2, tablero.pantalla.get_height() / 2, CELL_SIZE * 2, CELL_SIZE * 2))
 
         pygame.display.flip()
-        clock.tick(30)
+        clock.tick(FPS)
 
     print(f"Puntos Totales: {snake.puntos}")
     pygame.quit()
