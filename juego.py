@@ -2,6 +2,9 @@ import pygame
 import random
 import ia
 from abc import ABC, abstractmethod
+import networkx as nx
+import matplotlib.pyplot as plt
+
 
 DIR_LEFT = 'LEFT'
 DIR_RIGHT = 'RIGHT'
@@ -15,6 +18,7 @@ class Tablero():
         self.cellSize = tamCelda
         self.color = color
         self.pantalla = pygame.display.set_mode((self.anchoPx(), self.altoPx()))
+        self.grafo = self.generarGrafo()
 
     def altoPx(self):
         return self.alto * self.cellSize
@@ -35,7 +39,38 @@ class Tablero():
         pygame.draw.rect(self.pantalla, color, elemento)
 
     # retorna un grafo representando al tablero
-    def grafo(self):
+    def generarGrafo(self):
+        grafo = nx.Graph()
+        # agrego los nodos
+        for y in range(self.alto):
+            for x in range(self.ancho):
+                nodo = (x,y)
+                grafo.add_node(nodo)
+        # agrego las aristas
+        for y in range(self.alto):
+            for x in range(self.ancho):
+                nodoActual = (x,y)
+                # solo agrego la arista a la derecha si no estoy en la ultima columna
+                if x < self.ancho-1:
+                    nodoVecinoDerecha = (x+1,y)
+                    grafo.add_edge(nodoActual, nodoVecinoDerecha)
+                # solo agrego la arista a abajo si no estoy en la ultima fila
+                if y<self.alto-1:
+                    nodoVecinoAbajo = (x+1,y+1)
+                    grafo.add_edge(nodoActual, nodoVecinoAbajo)
+
+        # print("generando grafico")
+        # nx.draw(grafo,
+        #         with_labels=False,
+        #         node_size=5,
+        #         node_color="lightblue")
+        # print("guardando")
+        # plt.savefig('grafo.png')
+        # print("ok")
+
+        return grafo
+
+
         #TODO: debe retornar el grafo representando al tablero
         pass
 
@@ -168,14 +203,14 @@ class IA(Personaje):
                 y = int(rect.y / self.size)
                 obstacles[(x, y)] = True
 
-            path = ia.astar(start, goal, ancho_tablero,
+            path = ia.astar(start, goal, self.tablero.grafo, ancho_tablero,
                                 alto_tablero, obstacles)
-
-            print(f">>>>> path: {path} ")
 
             if path == None:
                 raise "error, path no encontrado"
             self.detenido = False
+
+            print(f">>>>> path: {path} ")
 
             # descarto el primero porque ya estoy en ese
             # sino hay colision con el cuerpo
@@ -207,11 +242,11 @@ class Comida:
         self.y = 0
 
     def reaparecer(self, snake):
-        limite_derecho = self.tablero.ancho - 4
-        limite_inferior = self.tablero.alto - 4
+        limite_derecho = self.tablero.ancho - 6
+        limite_inferior = self.tablero.alto - 6
 
-        self.x = random.randint(2, limite_derecho)
-        self.y = random.randint(2, limite_inferior)
+        self.x = random.randint(3, limite_derecho)
+        self.y = random.randint(3, limite_inferior)
 
         # evitamos que la comida aparezca en el cuerpo
         while snake.hayColision(self):
