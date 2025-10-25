@@ -17,8 +17,9 @@ class Tablero():
         self.ancho = ancho
         self.cellSize = tamCelda
         self.color = color
-        self.pantalla = pygame.display.set_mode((self.anchoPx(), self.altoPx()))
-        self.grafo = self.generarGrafo()
+        self.pantalla = pygame.display.set_mode(
+            (self.anchoPx(), self.altoPx()))
+        self.generarGrafo3()
 
     def altoPx(self):
         return self.alto * self.cellSize
@@ -38,51 +39,81 @@ class Tablero():
     def dibujar(self, elemento, color):
         pygame.draw.rect(self.pantalla, color, elemento)
 
-    # retorna un grafo representando al tablero
-    def generarGrafo(self):
-        grafo = nx.Graph()
-        # agrego los nodos
-        for y in range(self.alto):
-            for x in range(self.ancho):
-                nodo = (x,y)
-                grafo.add_node(nodo)
-        # agrego las aristas
-        for y in range(self.alto):
-            for x in range(self.ancho):
-                nodoActual = (x,y)
-                # solo agrego la arista a la derecha si no estoy en la ultima columna
-                if x < self.ancho-1:
-                    nodoVecinoDerecha = (x+1,y)
-                    grafo.add_edge(nodoActual, nodoVecinoDerecha)
-                # solo agrego la arista a abajo si no estoy en la ultima fila
-                if y<self.alto-1:
-                    nodoVecinoAbajo = (x+1,y+1)
-                    grafo.add_edge(nodoActual, nodoVecinoAbajo)
+    def generarGrafo3(self):
+        print("🔧 Generando grafo del tablero...", self.alto, self.ancho)
+        self.grafo = nx.grid_2d_graph(self.ancho, self.alto)
 
-        # print("generando grafico")
-        # nx.draw(grafo,
-        #         with_labels=False,
-        #         node_size=5,
-        #         node_color="lightblue")
-        # print("guardando")
-        # plt.savefig('grafo.png')
-        # print("ok")
+    def mostrar_camino(self, path):
 
-        return grafo
+        nombre_archivo = "grafo_camino.png"
+        # Crear figura proporcional al tamaño del tablero
+        fig_w = self.ancho * self.cellSize / 100
+        fig_h = self.alto * self.cellSize / 100
+        plt.figure(figsize=(fig_w, fig_h))
+        pos = {
+            (x, y): (x * self.cellSize, y * self.cellSize)
+            for x, y in self.grafo.nodes()
+        }
+        # Dibujar grafo base
+        nx.draw(
+            self.grafo,
+            pos=pos,
+            with_labels=False,
+            node_size=10,
+            node_color="black",
+            edge_color="gray",
+            linewidths=0.3
+        )
 
+        # Dibujar el camino (path)
+        if path:
+            nx.draw_networkx_nodes(
+                self.grafo,
+                pos,
+                nodelist=path,
+                node_color="yellow",
+                node_size=30
+            )
+            # Dibuja el nodo de inicio (primer elemento del path)
+            nx.draw_networkx_nodes(
+                self.grafo,
+                pos,
+                nodelist=[path[0]],
+                node_color="red",
+                node_size=50,
+                label="Inicio"
+            )
 
-        #TODO: debe retornar el grafo representando al tablero
-        pass
+            # Dibuja el nodo de destino (último elemento del path)
+            nx.draw_networkx_nodes(
+                self.grafo,
+                pos,
+                nodelist=[path[-1]],
+                node_color="green",
+                node_size=100,
+                label="Destino"
+            )
+
+        # Ajustes visuales
+        plt.axis("off")
+        plt.axis("equal")
+
+        # Guardar como imagen
+        plt.gca().invert_yaxis() 
+        plt.savefig(nombre_archivo, dpi=300, bbox_inches="tight")
+        plt.close()
+
+        print(f"✅ Camino guardado en '{nombre_archivo}'")
+
 
 class Personaje(ABC):
     def __init__(self,
-        tablero,
-        direccionInicial=DIR_RIGHT, 
-        x=0, 
-        y=0, 
-        colorCabeza=(255, 0, 0), 
-        colorCuerpo=(255, 255, 0)):
-
+                 tablero,
+                 direccionInicial=DIR_RIGHT,
+                 x=0,
+                 y=0,
+                 colorCabeza=(255, 0, 0),
+                 colorCuerpo=(255, 255, 0)):
 
         self.tablero = tablero
         self.size = tablero.cellSize
@@ -92,7 +123,7 @@ class Personaje(ABC):
         self.y = y
         # indica que la siguiente vez que se mueva, el cuerpo debe crecer
         self.creceAlMover = False
-        self.cuerpo=[]
+        self.cuerpo = []
         self.colorCabeza = colorCabeza
         self.colorCuerpo = colorCuerpo
         self.puntos = 0
@@ -122,7 +153,7 @@ class Personaje(ABC):
     def mover(self):
         # agregamos la celda actual en la cola para poder dibujarla
         self.cuerpo.append(self.getRect())
-            
+
         if self.direccion == DIR_UP:
             self.y -= 1
         elif self.direccion == DIR_DOWN:
@@ -130,13 +161,12 @@ class Personaje(ABC):
         elif self.direccion == DIR_RIGHT:
             self.x += 1
         else:
-            self.x -=1
-        
+            self.x -= 1
+
         # salvo que haya comido, tengo que eliminar el ultimo segmento de la cola
         if not self.creceAlMover:
             self.cuerpo.pop(0)
         self.creceAlMover = False
-
 
     def hayColision(self, objeto):
         for rect in self.cuerpo:
@@ -145,20 +175,22 @@ class Personaje(ABC):
                 return True
         return False
 
-
     # alimentar al snake
     # incrementa el tamaño del cuerpo
+
     def alimentar(self):
         self.creceAlMover = True
         self.puntos += 1
-        print(f" ********************** puntos: {self.puntos} *************************")
+        print(
+            f" ********************** puntos: {self.puntos} *************************")
 
     def dibujar(self):
         for rect in self.cuerpo:
             self.tablero.dibujar(rect, self.colorCuerpo)
         self.tablero.dibujar(self.getRect(), self.colorCabeza)
 
-class Humano(Personaje):   
+
+class Humano(Personaje):
     def determinarDireccion(self):
         keys = pygame.key.get_pressed()
 
@@ -178,17 +210,17 @@ class Humano(Personaje):
 
 class IA(Personaje):
     def __init__(self,
-        tablero,
-        comida,
-        direccionInicial=DIR_RIGHT, 
-        x=0, y=0, 
-        colorCabeza=(255, 0, 0), 
-        colorCuerpo=(255, 255, 0)):
+                 tablero,
+                 comida,
+                 direccionInicial=DIR_RIGHT,
+                 x=0, y=0,
+                 colorCabeza=(255, 0, 0),
+                 colorCuerpo=(255, 255, 0)):
 
         self.comida = comida
         self.camino = []
-        super().__init__(tablero, direccionInicial,x, y, colorCabeza, colorCuerpo)
-    
+        super().__init__(tablero, direccionInicial, x, y, colorCabeza, colorCuerpo)
+
     def determinarDireccion(self):
         if len(self.camino) == 0:
             start = (self.x, self.y)
@@ -202,19 +234,19 @@ class IA(Personaje):
                 x = int(rect.x / self.size)
                 y = int(rect.y / self.size)
                 obstacles[(x, y)] = True
-
+            print(f"A*: {start, goal, self.tablero.grafo, ancho_tablero,
+                         alto_tablero, obstacles}")
             path = ia.astar(start, goal, self.tablero.grafo, ancho_tablero,
-                                alto_tablero, obstacles)
+                            alto_tablero, obstacles)
+            self.tablero.mostrar_camino(path)
 
             if path == None:
                 raise "error, path no encontrado"
             self.detenido = False
 
-            print(f">>>>> path: {path} ")
-
             # descarto el primero porque ya estoy en ese
             # sino hay colision con el cuerpo
-            path.pop(0) 
+            path.pop(0)
             self.camino = path
         return
 
@@ -227,7 +259,7 @@ class IA(Personaje):
 
             if not self.creceAlMover:
                 self.cuerpo.pop(0)
-                
+
         self.creceAlMover = False
 
         return
@@ -252,10 +284,9 @@ class Comida:
         while snake.hayColision(self):
             self.x = random.randint(2, limite_derecho)
             self.y = random.randint(2, limite_inferior)
-        
-        rect = pygame.Rect(self.x, self.y, self.size, self.size)      
-        print(f"nueva comida en {rect}")
 
+        rect = pygame.Rect(self.x, self.y, self.size, self.size)
+        print(f"nueva comida en {rect}")
 
     def dibujar(self):
         self.tablero.dibujar(self.getRect(), self.color)
@@ -267,6 +298,7 @@ class Comida:
 
         return pygame.Rect(x, y, self.size, self.size)
 
+
 class Muro():
     def __init__(self, tablero, grosor=20, color=(255, 255, 0)):
         self.color = color
@@ -277,8 +309,10 @@ class Muro():
         alto_tablero = tablero.pantalla.get_height()
 
         self.muro.append(pygame.Rect(0, 0, ancho_tablero, grosor))
-        self.muro.append(pygame.Rect(ancho_tablero - grosor, 0, ancho_tablero - grosor, ancho_tablero))
-        self.muro.append(pygame.Rect(0, alto_tablero - grosor, ancho_tablero, grosor))
+        self.muro.append(pygame.Rect(ancho_tablero - grosor, 0,
+                         ancho_tablero - grosor, ancho_tablero))
+        self.muro.append(pygame.Rect(0, alto_tablero -
+                         grosor, ancho_tablero, grosor))
         self.muro.append(pygame.Rect(0, 0, grosor, ancho_tablero))
 
     def dibujar(self):
