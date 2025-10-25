@@ -1,5 +1,4 @@
 import pygame
-import ia
 import juego
 
 pygame.init()
@@ -33,14 +32,14 @@ def init():
 
     # snake = juego.Humano(
     #     tablero,
-    #     colorCabeza=SNAKE_COLOR, 
-    #     colorCuerpo=TAIL_COLOR, 
+    #     colorCabeza=SNAKE_COLOR,
+    #     colorCuerpo=TAIL_COLOR,
     #     x=xInicial, y=yInicial)
 
     snake = juego.IA(
         tablero, comida,
-        colorCabeza=SNAKE_COLOR, 
-        colorCuerpo=TAIL_COLOR, 
+        colorCabeza=SNAKE_COLOR,
+        colorCuerpo=TAIL_COLOR,
         x=xInicial, y=yInicial)
 
     comida.reaparecer(snake)
@@ -84,7 +83,7 @@ def init():
             if event.type == pygame.QUIT:
                 salir = True
                 continue
-        # tablero.pantalla.fill(BG_COLOR)  # Fill the display with a solid color
+
         pygame.draw.rect(tablero.pantalla, SNAKE_DEATH_COLOR,
                          (tablero.pantalla.get_width() / 2, tablero.pantalla.get_height() / 2, CELL_SIZE * 2, CELL_SIZE * 2))
 
@@ -96,4 +95,3 @@ def init():
 
 
 init()
-# initIA()

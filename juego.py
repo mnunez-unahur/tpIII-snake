@@ -99,7 +99,7 @@ class Tablero():
         plt.axis("equal")
 
         # Guardar como imagen
-        plt.gca().invert_yaxis() 
+        plt.gca().invert_yaxis()
         plt.savefig(nombre_archivo, dpi=300, bbox_inches="tight")
         plt.close()
 
@@ -171,7 +171,6 @@ class Personaje(ABC):
     def hayColision(self, objeto):
         for rect in self.cuerpo:
             if rect.colliderect(objeto.getRect()):
-                print(f"colision con {rect}")
                 return True
         return False
 
@@ -285,8 +284,7 @@ class Comida:
             self.x = random.randint(2, limite_derecho)
             self.y = random.randint(2, limite_inferior)
 
-        rect = pygame.Rect(self.x, self.y, self.size, self.size)
-        print(f"nueva comida en {rect}")
+        pygame.Rect(self.x, self.y, self.size, self.size)
 
     def dibujar(self):
         self.tablero.dibujar(self.getRect(), self.color)
