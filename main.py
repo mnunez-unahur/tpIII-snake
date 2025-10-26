@@ -21,11 +21,17 @@ def init():
     FOOD_COLOR = (0, 255, 0)
     BG_COLOR = (0, 0, 0)
     FPS = 10
+    grabarImageCamino = False
 
     modo = input("""Quien Juega? H=Humano / I=IA:  """).lower()
     if modo != "h" and modo != "i":
         print("modo no soportado")
         return 
+    elif modo == "i":
+        i = int(input("""Generar grafo_camino.png: (1 = Si) """))
+        if i == 1:
+            grabarImageCamino = True
+
 
 
     tablero = juego.Tablero(64, 48, CELL_SIZE, BG_COLOR)
@@ -51,7 +57,7 @@ def init():
             colorCabeza=SNAKE_COLOR,
             colorCuerpo=TAIL_COLOR,
             x=xInicial, y=yInicial,
-            grabarImageCamino=False, 
+            grabarImageCamino=grabarImageCamino, 
             )
 
 
