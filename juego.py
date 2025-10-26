@@ -214,10 +214,12 @@ class IA(Personaje):
                  direccionInicial=DIR_RIGHT,
                  x=0, y=0,
                  colorCabeza=(255, 0, 0),
-                 colorCuerpo=(255, 255, 0)):
+                 colorCuerpo=(255, 255, 0),
+                 grabarImageCamino=False):
 
         self.comida = comida
         self.camino = []
+        self.grabarImageCamino = grabarImageCamino
         super().__init__(tablero, direccionInicial, x, y, colorCabeza, colorCuerpo)
 
     def determinarDireccion(self):
@@ -233,11 +235,13 @@ class IA(Personaje):
                 x = int(rect.x / self.size)
                 y = int(rect.y / self.size)
                 obstacles[(x, y)] = True
-            print(f"A*: {start, goal, self.tablero.grafo, ancho_tablero,
-                         alto_tablero, obstacles}")
+            print(f"""A*: {start, goal, self.tablero.grafo, ancho_tablero,
+                         alto_tablero, obstacles}""")
             path = ia.astar(start, goal, self.tablero.grafo, ancho_tablero,
                             alto_tablero, obstacles)
-            self.tablero.mostrar_camino(path)
+
+            if self.grabarImageCamino:
+                self.tablero.mostrar_camino(path)
 
             if path == None:
                 raise "error, path no encontrado"

@@ -22,6 +22,12 @@ def init():
     BG_COLOR = (0, 0, 0)
     FPS = 10
 
+    modo = input("""Quien Juega? H=Humano / I=IA:  """).lower()
+    if modo != "h" and modo != "i":
+        print("modo no soportado")
+        return 
+
+
     tablero = juego.Tablero(64, 48, CELL_SIZE, BG_COLOR)
     clock = pygame.time.Clock()
 
@@ -30,17 +36,24 @@ def init():
     comida = juego.Comida(tablero, color=FOOD_COLOR)
     muro = juego.Muro(tablero, color=WALL_COLOR)
 
-    # snake = juego.Humano(
-    #     tablero,
-    #     colorCabeza=SNAKE_COLOR,
-    #     colorCuerpo=TAIL_COLOR,
-    #     x=xInicial, y=yInicial)
+    snake = None
 
-    snake = juego.IA(
-        tablero, comida,
-        colorCabeza=SNAKE_COLOR,
-        colorCuerpo=TAIL_COLOR,
-        x=xInicial, y=yInicial)
+    if modo == "h":
+        snake = juego.Humano(
+            tablero,
+            colorCabeza=SNAKE_COLOR,
+            colorCuerpo=TAIL_COLOR,
+            x=xInicial, y=yInicial,
+            )
+    else:
+        snake = juego.IA(
+            tablero, comida,
+            colorCabeza=SNAKE_COLOR,
+            colorCuerpo=TAIL_COLOR,
+            x=xInicial, y=yInicial,
+            grabarImageCamino=False, 
+            )
+
 
     comida.reaparecer(snake)
 
