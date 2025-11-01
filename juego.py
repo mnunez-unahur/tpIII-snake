@@ -106,7 +106,7 @@ class Tablero():
         print(f"✅ Camino guardado en '{nombre_archivo}'")
 
 
-class Personaje(ABC):
+class Snake(ABC):
     def __init__(self,
                  tablero,
                  direccionInicial=DIR_RIGHT,
@@ -189,7 +189,7 @@ class Personaje(ABC):
         self.tablero.dibujar(self.getRect(), self.colorCabeza)
 
 
-class Humano(Personaje):
+class Humano(Snake):
     def determinarDireccion(self):
         keys = pygame.key.get_pressed()
 
@@ -207,7 +207,7 @@ class Humano(Personaje):
             self.detenido = False
 
 
-class IA(Personaje):
+class IA(Snake):
     def __init__(self,
                  tablero,
                  comida,
@@ -215,11 +215,11 @@ class IA(Personaje):
                  x=0, y=0,
                  colorCabeza=(255, 0, 0),
                  colorCuerpo=(255, 255, 0),
-                 grabarImageCamino=False):
+                 debug=False):
 
         self.comida = comida
         self.camino = []
-        self.grabarImageCamino = grabarImageCamino
+        self.debug = debug
         super().__init__(tablero, direccionInicial, x, y, colorCabeza, colorCuerpo)
 
     def determinarDireccion(self):
@@ -235,12 +235,13 @@ class IA(Personaje):
                 x = int(rect.x / self.size)
                 y = int(rect.y / self.size)
                 obstacles[(x, y)] = True
-            print(f"""A*: {start, goal, self.tablero.grafo, ancho_tablero,
-                         alto_tablero, obstacles}""")
             path = ia.astar(start, goal, self.tablero.grafo, ancho_tablero,
                             alto_tablero, obstacles)
 
-            if self.grabarImageCamino:
+            if self.debug:
+                print(f"""A*: {start, goal, self.tablero.grafo, ancho_tablero,
+                            alto_tablero, obstacles}""")
+                print(path)
                 self.tablero.mostrar_camino(path)
 
             if path == None:
