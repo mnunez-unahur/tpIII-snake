@@ -21,6 +21,7 @@ source venv/bin/activate
 ```bash
 pip3 install -r requisitos.txt
 ```
-
+5. Jugar!
+python3 main.py
 
 
